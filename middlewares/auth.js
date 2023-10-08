@@ -1,5 +1,7 @@
 // Import necessary modules
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
 
 // Middleware for user role-based access control
 function checkUserRole(allowedRoles) {
@@ -16,10 +18,6 @@ function checkUserRole(allowedRoles) {
     next();
   };
 }
-
-const fs = require("fs");
-const path = require("path");
-const jwt = require("jsonwebtoken");
 
 // Middleware to verify JWT token
 function verifyToken(req, res, next) {
@@ -69,4 +67,5 @@ function logUserInfo(req, res, next) {
 module.exports = {
   verifyToken,
   logUserInfo,
+  checkUserRole,
 };

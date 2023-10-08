@@ -3,6 +3,11 @@ const authRouter = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/User");
+const nodemailer = require("nodemailer");
+const randomstring = require("randomstring");
+const dotenv = require("dotenv");
+
+dotenv.config();
 // Assuming you've defined your userModel model
 
 // Signup Route
@@ -70,6 +75,75 @@ authRouter.post("/login", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Generate a random OTP
+function generateOTP() {
+  return randomstring.generate({
+    length: 6,
+    charset: "numeric",
+  });
+}
+
+// Create a Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: process.env.SMTP_SECURE === "true",
+  auth: {
+    user: process.env.EMAIL_USERNAME,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+});
+
+// Store OTPs temporarily (You might want to use a database for this)
+const otpStorage = {};
+
+// POST route to send OTP to user's email
+authRouter.post("/send-otp", async (req, res) => {
+  const { email } = req.body;
+
+  // Generate OTP
+  const otp = generateOTP();
+
+  // Store OTP
+  otpStorage[email] = otp;
+
+  // Create email message
+  const mailOptions = {
+    from: process.env.EMAIL_USERNAME,
+    to: email,
+    subject: "Your OTP for Password Reset",
+    text: `Your OTP for password reset is: ${otp}`,
+  };
+
+  try {
+    // Send email
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: "OTP sent successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to send OTP" });
+  }
+});
+
+// POST route to verify OTP and reset password
+authRouter.post("/verify-otp", (req, res) => {
+  const { email, otp, newPassword } = req.body;
+
+  // Verify OTP
+  if (otpStorage[email] === otp) {
+    // Reset password logic here (update in the database, for example)
+    // In this example, we're just printing the new password
+    console.log(`New password for ${email}: ${newPassword}`);
+
+    // Clear OTP
+    delete otpStorage[email];
+
+    res.status(200).json({ message: "Password reset successful" });
+  } else {
+    res.status(401).json({ error: "Invalid OTP" });
   }
 });
 
