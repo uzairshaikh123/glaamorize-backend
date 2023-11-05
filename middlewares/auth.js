@@ -2,13 +2,14 @@
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
+const bcrypt = require("bcrypt");
 
 // Middleware for user role-based access control
 function checkUserRole(allowedRoles) {
   return (req, res, next) => {
+    console.log(req.body.user.role);
     // Get the user's role from the JWT token (assuming you store it in the token)
-    const userRole = req.user.role; // Assuming 'role' is part of your JWT payload
-
+    const userRole = req.body.user.role; // Assuming 'role' is part of your JWT payload
     // Check if the user's role is included in the allowedRoles array
     if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({ message: "Access denied" });
@@ -30,7 +31,7 @@ function verifyToken(req, res, next) {
 
   try {
     // Verify the token using your secret key
-    const decoded = jwt.verify(token, "your-secret-key"); // Replace with your actual secret key
+    const decoded = jwt.verify(token, "usersignup"); // Replace with your actual secret key
 
     // Attach the decoded token payload to the request for later use
     req.user = decoded;
@@ -44,12 +45,12 @@ function verifyToken(req, res, next) {
 
 // Middleware to log user information
 function logUserInfo(req, res, next) {
-  const user = req.user;
+  const user = req.body;
 
   // Create a log entry with user information
-  const logEntry = `User ID: ${user.userId}, Username: ${
+  const logEntry = `User Email: ${user.email}, Username: ${
     user.username
-  }, Role: ${user.role}, Timestamp: ${new Date()}\n`;
+  }, Role: ${user.role || "customer"}, Timestamp: ${new Date()}\n`;
 
   // Define the log file path
   const logFilePath = path.join(__dirname, "logs", "user_logs.txt"); // Change the filename as needed

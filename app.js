@@ -5,8 +5,9 @@ const { verifyToken, logUserInfo } = require("./middlewares/auth");
 const bodyParser = require("body-parser");
 const randomstring = require("randomstring");
 const dotenv = require("dotenv");
+const productRouter = require("./routes/productRoute");
 const app = express();
-const port = 3000;
+const port = 8080;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -19,7 +20,8 @@ app.get("/", (req, res) => {
   res.send("Hello, World!");
 });
 
-app.use("/auth", verifyToken, logUserInfo, authRouter);
+app.use("/auth", logUserInfo, authRouter);
+app.use("/product", logUserInfo, productRouter);
 
 // Start the server
 app.listen(port, async () => {
